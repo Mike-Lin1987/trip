@@ -1,111 +1,439 @@
 [
   {
+    "id": "1",
+    "destinationId": "1",
+    "title": "東京五天四夜：傳統與未來的深度之旅",
+    "author": "小林",
+    "rating": 4.8,
+    "budget": "中等",
+    "transportation": "地鐵、JR、步行",
+    "itinerary": [
+      {
+        "day": 1,
+        "activities": [
+          "抵達成田機場",
+          "入住新宿飯店",
+          "歌舞伎町散策",
+          "東京都廳看夜景"
+        ]
+      },
+      {
+        "day": 2,
+        "activities": [
+          "淺草寺參拜",
+          "仲見世通小吃",
+          "晴空塔眺望",
+          "上野公園美術館"
+        ]
+      },
+      {
+        "day": 3,
+        "activities": [
+          "築地場外市場早餐",
+          "銀座購物",
+          "原宿明治神宮",
+          "澀谷十字路口拍照"
+        ]
+      },
+      {
+        "day": 4,
+        "activities": [
+          "迪士尼樂園或迪士尼海洋一日遊"
+        ]
+      },
+      {
+        "day": 5,
+        "activities": [
+          "最後採買：唐吉訶德",
+          "搭機返程"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "destinationId": "2",
+    "title": "巴黎浪漫三日遊：艾菲爾鐵塔與羅浮宮巡禮",
+    "author": "Marie",
+    "rating": 4.9,
+    "budget": "高",
+    "transportation": "地鐵、步行、塞納河遊船",
+    "itinerary": [
+      {
+        "day": 1,
+        "activities": [
+          "艾菲爾鐵塔拍照",
+          "戰神廣場野餐",
+          "凱旋門與香榭麗舍大道"
+        ]
+      },
+      {
+        "day": 2,
+        "activities": [
+          "羅浮宮深度導覽",
+          "杜樂麗花園漫步",
+          "塞納河夕陽遊船"
+        ]
+      },
+      {
+        "day": 3,
+        "activities": [
+          "蒙馬特聖心堂",
+          "畫家村速寫",
+          "左岸咖啡館下午茶"
+        ]
+      }
+    ]
+  },
+  {
     "id": "hokuriku-guide",
     "destinationId": "hokuriku",
     "title": "北陸、大阪 9天8夜：冬日悠閒之旅",
     "author": "家族旅遊",
-    "rating": 5.0,
+    "rating": 5,
     "budget": "中高",
     "transportation": "JR 關西&北陸地區鐵路周遊券、地鐵、步行",
     "itinerary": [
       {
         "day": 1,
         "title": "啟程與入境大阪",
-        "description": "抵達大阪，開啟家族冬日之旅的第一章。",
         "activities": [
-          { "time": "15:25", "text": "高雄 KHH 出發 (中華航空 CI176)", "location": "高雄國際機場" },
-          { "time": "19:10", "text": "大阪 KIX 抵達", "location": "關西國際機場" },
-          { "time": "20:00", "text": "JR 綠色窗口換票 (關西&北陸地區鐵路周遊券)", "location": "JR 關西機場站" },
-          { "time": "20:30", "text": "乘坐 JR 特急 Haruka 前往大阪市區", "location": "JR 大阪站" },
-          { "time": "21:30", "text": "抵達飯店辦理入住", "location": "Hotel Gracery Osaka Namba" }
+          "15:25 高雄 KHH 出發",
+          "19:10 大阪 KIX 抵達",
+          "入境後前往 JR 綠色窗口換票",
+          "20:30 左右 乘坐 JR 特急 Haruka 前往大阪市區",
+          "21:30 抵達飯店 (建議入住 JR 大阪站附近)"
         ]
       },
       {
         "day": 2,
         "title": "一路向北，前往金澤",
-        "description": "搭乘雷鳥號特急，穿梭雪國鐵道前往加賀百萬石之城。",
         "activities": [
-          { "time": "11:30", "text": "JR 大阪站出發", "location": "JR 大阪站" },
-          { "time": "12:00", "text": "搭乘特急 Thunderbird (雷鳥號) 北上", "location": "Thunderbird" },
-          { "time": "15:00", "text": "抵達金澤站，辦理入住", "location": "Hyatt Centric Kanazawa" },
-          { "time": "16:00", "text": "東茶屋街散策與下午茶", "location": "東茶屋街" },
-          { "time": "18:00", "text": "金澤站「百番街」享用晚餐", "location": "金澤百番街" }
+          "11:30-12:30 JR 大阪站出發，搭乘特急 Thunderbird (雷鳥號)",
+          "15:00 抵達金澤站，辦理入住、寄放行李",
+          "15:30 乘坐周遊巴士前往東茶屋街享用下午茶",
+          "旅行亮點：火車上享用「駅弁」火車便當"
         ]
       },
       {
         "day": 3,
         "title": "金澤冬日雙景：庭園與神社",
-        "description": "漫步在兼六園的雪吊美景與尾山神社的獨特建築中。",
         "activities": [
-          { "time": "09:30", "text": "兼六園：欣賞冬日限定雪吊", "location": "兼六園" },
-          { "time": "11:30", "text": "金澤城公園散步", "location": "金澤城" },
-          { "time": "14:00", "text": "尾山神社：和漢洋混合建築", "location": "尾山神社" },
-          { "time": "16:00", "text": "近江町市場享用新鮮海產", "location": "近江町市場" }
+          "兼六園：感受日本三大名園之首的「雪吊」冬日限定美景",
+          "尾山神社：探訪融合和漢洋三種風格的獨特神門",
+          "下午在金澤市內漫步，享受靜謐與壯麗"
         ]
       },
       {
         "day": 4,
         "title": "白川鄉合掌村一日遊",
-        "description": "深入世界文化遺產，感受如同童話故事般的薑餅屋村落。",
         "activities": [
-          { "time": "08:30", "text": "金澤站西口集合 (一日團)", "location": "金澤站" },
-          { "time": "10:30", "text": "抵達白川鄉合掌村", "location": "白川鄉合掌造聚落" },
-          { "time": "12:00", "text": "展望台俯瞰全景", "location": "白川鄉城山展望台" },
-          { "time": "17:30", "text": "返回金澤市區", "location": "金澤站" }
+          "08:30 金澤站西口集合 (參加中文導覽一日團)",
+          "09:00 出發前往白川鄉",
+          "10:30-16:30 白川鄉合掌屋、展望台、荻町城跡自由參觀",
+          "17:30 返回金澤，享用「百番街」晚餐"
         ]
       },
       {
         "day": 5,
         "title": "新幹線快閃富山",
-        "description": "體驗極速新幹線，拜訪世界最美星巴克。",
         "activities": [
-          { "time": "12:00", "text": "搭乘北陸新幹線前往富山", "location": "富山站" },
-          { "time": "13:00", "text": "環水公園與最美星巴克", "location": "星巴克 富山環水公園店" },
-          { "time": "15:30", "text": "富山玻璃美術館", "location": "富山市玻璃美術館" },
-          { "time": "18:00", "text": "返回金澤", "location": "金澤站" }
+          "12:00 搭乘北陸新幹線 (劍山號 Tsurugi) 前往富山 (僅需20分鐘)",
+          "換乘路面電車前往環水公園",
+          "造訪「全球最美星巴克」環水公園店",
+          "隨時搭乘新幹線返回金澤"
         ]
       },
       {
         "day": 6,
         "title": "金澤深度：藝術與歷史",
-        "description": "結合當代藝術與武士歷史的知性之旅。",
         "activities": [
-          { "time": "10:00", "text": "21世紀美術館：體驗著名的泳池", "location": "金澤21世紀美術館" },
-          { "time": "14:00", "text": "長町武家屋敷跡：武士街道", "location": "長町武家屋敷跡" },
-          { "time": "16:00", "text": "香林坊逛街購物", "location": "香林坊" }
+          "上午：21世紀美術館，體驗著名的裝置藝術「泳池」",
+          "下午：長町武家屋敷跡，漫步在保存完好的武士住宅區",
+          "交通提示：今日行程可搭乘市內巴士輕鬆抵達"
         ]
       },
       {
         "day": 7,
         "title": "直奔大阪：城市悠遊",
-        "description": "告別北陸，回到繁華的大阪繼續旅程。",
         "activities": [
-          { "time": "11:00", "text": "搭乘 Thunderbird 返回大阪", "location": "JR 大阪站" },
-          { "time": "14:00", "text": "心齋橋飯店 check-in", "location": "Cross Hotel Osaka" },
-          { "time": "16:00", "text": "道頓堀散策與固力果跑跑人", "location": "道頓堀" },
-          { "time": "19:00", "text": "梅田藍天大廈看夜景", "location": "梅田藍天大廈" }
+          "午間：從金澤站搭乘特急 Thunderbird 返回大阪",
+          "下午：抵達大阪後前往心齋橋附近飯店入住",
+          "傍晚：前往梅田藍天大廈空中庭園展望台，俯瞰冬日夜景"
         ]
       },
       {
         "day": 8,
         "title": "大阪美食與最後採買",
-        "description": "盡情享用大阪廚房的美食，並補齊所有的伴手禮。",
         "activities": [
-          { "time": "09:30", "text": "黑門市場早餐之旅", "location": "黑門市場" },
-          { "time": "13:00", "text": "難波與心齋橋百貨採買", "location": "心齋橋筋商店街" },
-          { "time": "18:30", "text": "敘敘苑燒肉晚餐", "location": "敘敘苑 游玄亭 大阪心齋橋店" }
+          "黑門市場：邊走邊吃道地海鮮、漬物與菓子",
+          "難波、心齋橋：藥妝、伴手禮、時尚選物最後掃貨",
+          "晚餐：敘敘苑 (Jojoen) 燒肉晚宴"
         ]
       },
       {
         "day": 9,
         "title": "歸途與戰利品總結",
-        "description": "滿載的回憶與行李，踏上溫暖的歸途。",
         "activities": [
-          { "time": "10:00", "text": "飯店退房與最後漫步", "location": "難波車站" },
-          { "time": "15:00", "text": "搭乘 Haruka 前往機場", "location": "關西國際機場" },
-          { "time": "17:30", "text": "機場辦理登機與免稅店", "location": "關西機場第一航廈" },
-          { "time": "20:10", "text": "搭乘 CI177 返回高雄", "location": "高雄國際機場" }
+          "上午：退房整理，最後確認行李重量",
+          "15:00 前往機場 (搭乘 Haruka)",
+          "17:30 抵達 KIX 機場辦理登機",
+          "20:10 CI177 起飛返回高雄"
         ]
+      }
+    ]
+  },
+  {
+    "id": "705edb8d-2cdd-440d-b9a8-a4648c92f923",
+    "destinationId": "hokuriku",
+    "title": "北陸、大阪 9天8夜：冬日悠閒家族之旅",
+    "author": "家族旅遊 (Mike)",
+    "rating": 5,
+    "budget": "中高",
+    "transportation": "JR 關西&北陸地區鐵路周遊券、地鐵、步行",
+    "itinerary": [
+      {
+        "day": 1,
+        "title": "啟程與入境大阪",
+        "activities": [
+          {
+            "text": "高雄 KHH 出發 (中華航空 CI176)",
+            "time": "15:25",
+            "location": "高雄國際機場"
+          },
+          {
+            "text": "大阪 KIX 抵達",
+            "time": "19:10",
+            "location": "關西國際機場"
+          },
+          {
+            "text": "JR 綠色窗口換票",
+            "time": "20:00",
+            "location": "JR 關西機場站"
+          },
+          {
+            "text": "乘坐 JR 特急 Haruka 前往大阪市區",
+            "time": "20:30",
+            "location": "JR 大阪站"
+          },
+          {
+            "text": "抵達飯店辦理入住",
+            "time": "21:30",
+            "location": "Hotel Gracery Osaka Namba"
+          }
+        ],
+        "description": "抵達大阪，開啟家族冬日之旅的第一章。"
+      },
+      {
+        "day": 2,
+        "title": "一路向北，前往金澤",
+        "activities": [
+          {
+            "text": "JR 大阪站出發",
+            "time": "11:30",
+            "location": "JR 大阪站"
+          },
+          {
+            "text": "搭乘特急 Thunderbird (雷鳥號) 北上",
+            "time": "12:00",
+            "location": "Thunderbird"
+          },
+          {
+            "text": "抵達金澤站，辦理入住",
+            "time": "15:00",
+            "location": "Hyatt Centric Kanazawa"
+          },
+          {
+            "text": "東茶屋街散策與下午茶",
+            "time": "16:00",
+            "location": "東茶屋街"
+          },
+          {
+            "text": "金澤站「百番街」享用晚餐",
+            "time": "18:00",
+            "location": "金澤百番街"
+          }
+        ],
+        "description": "搭乘雷鳥號特急，穿梭雪國鐵道前往加賀百萬石之城。"
+      },
+      {
+        "day": 3,
+        "title": "金澤冬日雙景：庭園與神社",
+        "activities": [
+          {
+            "text": "兼六園：欣賞冬日限定雪吊",
+            "time": "09:30",
+            "location": "兼六園"
+          },
+          {
+            "text": "金澤城公園散步",
+            "time": "11:30",
+            "location": "金澤城"
+          },
+          {
+            "text": "尾山神社：和漢洋混合建築",
+            "time": "14:00",
+            "location": "尾山神社"
+          },
+          {
+            "text": "近江町市場享用新鮮海產",
+            "time": "16:00",
+            "location": "近江町市場"
+          }
+        ],
+        "description": "漫步在兼六園的雪吊美景與尾山神社的獨特建築中。"
+      },
+      {
+        "day": 4,
+        "title": "白川鄉合掌村一日遊",
+        "activities": [
+          {
+            "text": "金澤站西口集合 (一日團)",
+            "time": "08:30",
+            "location": "金澤站"
+          },
+          {
+            "text": "抵達白川鄉合掌村",
+            "time": "10:30",
+            "location": "白川鄉合掌造聚落"
+          },
+          {
+            "text": "展望台俯瞰全景",
+            "time": "12:00",
+            "location": "白川鄉城山展望台"
+          },
+          {
+            "text": "返回金澤市區",
+            "time": "17:30",
+            "location": "金澤站"
+          }
+        ],
+        "description": "深入世界文化遺產，感受如同童話故事般的薑餅屋村落。"
+      },
+      {
+        "day": 5,
+        "title": "新幹線快閃富山",
+        "activities": [
+          {
+            "text": "搭乘北陸新幹線前往富山",
+            "time": "12:00",
+            "location": "富山站"
+          },
+          {
+            "text": "環水公園與最美星巴克",
+            "time": "13:00",
+            "location": "星巴克 富山環水公園店"
+          },
+          {
+            "text": "富山玻璃美術館",
+            "time": "15:30",
+            "location": "富山市玻璃美術館"
+          },
+          {
+            "text": "返回金澤",
+            "time": "18:00",
+            "location": "金澤站"
+          }
+        ],
+        "description": "體驗極速新幹線，拜訪世界最美星巴克。"
+      },
+      {
+        "day": 6,
+        "title": "金澤深度：藝術與歷史",
+        "activities": [
+          {
+            "text": "21世紀美術館：體驗著名的泳池",
+            "time": "10:00",
+            "location": "金澤21世紀美術館"
+          },
+          {
+            "text": "長町武家屋敷跡：武士街道",
+            "time": "14:00",
+            "location": "長町武家屋敷跡"
+          },
+          {
+            "text": "香林坊逛街購物",
+            "time": "16:00",
+            "location": "香林坊"
+          }
+        ],
+        "description": "結合當代藝術與武士歷史的知性之旅。"
+      },
+      {
+        "day": 7,
+        "title": "直奔大阪：城市悠遊",
+        "activities": [
+          {
+            "text": "搭乘 Thunderbird 返回大阪",
+            "time": "11:00",
+            "location": "JR 大阪站"
+          },
+          {
+            "text": "心齋橋飯店 check-in",
+            "time": "14:00",
+            "location": "Cross Hotel Osaka"
+          },
+          {
+            "text": "道頓堀散策與固力果跑跑人",
+            "time": "16:00",
+            "location": "道頓堀"
+          },
+          {
+            "text": "梅田藍天大廈看夜景",
+            "time": "19:00",
+            "location": "梅田藍天大廈"
+          }
+        ],
+        "description": "告別北陸，回到繁華的大阪繼續旅程。"
+      },
+      {
+        "day": 8,
+        "title": "大阪美食與最後採買",
+        "activities": [
+          {
+            "text": "黑門市場早餐之旅",
+            "time": "09:30",
+            "location": "黑門市場"
+          },
+          {
+            "text": "難波與心齋橋百貨採買",
+            "time": "13:00",
+            "location": "心齋橋筋商店街"
+          },
+          {
+            "text": "敘敘苑燒肉晚餐",
+            "time": "18:30",
+            "location": "敘敘苑 游玄亭 大阪心齋橋店"
+          }
+        ],
+        "description": "盡情享用大阪廚房的美食，並補齊所有的伴手禮。"
+      },
+      {
+        "day": 9,
+        "title": "歸途與戰利品總結",
+        "activities": [
+          {
+            "text": "飯店退房與最後漫步",
+            "time": "10:00",
+            "location": "難波車站"
+          },
+          {
+            "text": "搭乘 Haruka 前往機場",
+            "time": "15:00",
+            "location": "關西國際機場"
+          },
+          {
+            "text": "機場辦理登機與免稅店",
+            "time": "17:30",
+            "location": "關西機場第一航廈"
+          },
+          {
+            "text": "搭乘 CI177 返回高雄",
+            "time": "20:10",
+            "location": "高雄國際機場"
+          }
+        ],
+        "description": "滿載的回憶與行李，踏上溫暖的歸途。"
       }
     ]
   }
