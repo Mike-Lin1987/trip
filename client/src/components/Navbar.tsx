@@ -12,6 +12,7 @@ const Navbar: React.FC = () => {
         </Link>
         <div className="nav-links">
           <Link to="/explore" className="nav-link">探索</Link>
+          <Link to="/create" className="nav-link">建立攻略</Link>
           <Link to="/favorites" className="nav-link">
             <Heart size={20} />
             <span>我的最愛</span>

@@ -4,6 +4,7 @@ import Explore from './pages/Explore';
 import GuideDetails from './pages/GuideDetails';
 import DayView from './pages/DayView';
 import Favorites from './pages/Favorites';
+import CreateGuide from './pages/CreateGuide';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { FavoritesProvider } from './context/FavoritesContext';
@@ -18,6 +19,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/explore" element={<Explore />} />
+              <Route path="/create" element={<CreateGuide />} />
               <Route path="/guide/:id" element={<GuideDetails />} />
               <Route path="/guide/:id/day/:dayId" element={<DayView />} />
               <Route path="/favorites" element={<Favorites />} />

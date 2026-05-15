@@ -150,6 +150,59 @@ app.delete('/api/favorites/:guideId', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/guides
+app.post('/api/guides', async (req: Request, res: Response) => {
+  try {
+    const { 
+      title, 
+      author, 
+      rating, 
+      budget, 
+      transportation, 
+      itinerary, 
+      destinationName,
+      destinationDescription,
+      destinationImage,
+      destinationRegion,
+      destinationTags
+    } = req.body;
+
+    // First, find or create the destination
+    let destination = await prisma.destination.findFirst({
+      where: { name: destinationName }
+    });
+
+    if (!destination) {
+      destination = await prisma.destination.create({
+        data: {
+          name: destinationName,
+          description: destinationDescription || '',
+          image: destinationImage || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=1600&q=80',
+          region: destinationRegion || '未知',
+          tags: destinationTags || []
+        }
+      });
+    }
+
+    const guide = await prisma.guide.create({
+      data: {
+        title,
+        author,
+        rating: parseFloat(rating) || 5.0,
+        budget,
+        transportation,
+        itinerary,
+        destinationId: destination.id
+      }
+    });
+
+    res.status(201).json(guide);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create guide' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
