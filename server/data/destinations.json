@@ -1,0 +1,10 @@
+[
+  {
+    "id": "hokuriku",
+    "name": "北陸、大阪",
+    "description": "探索北陸雪景與大阪美食，9天8夜冬日悠閒之旅。",
+    "image": "https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1600&q=80",
+    "region": "日本",
+    "tags": ["雪景", "美食", "溫泉", "文化"]
+  }
+]
