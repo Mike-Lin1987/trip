@@ -1,0 +1,81 @@
+import type { MapHighlight, MapRouteSegment } from "@/types/trip";
+
+export const mapRouteSegments: MapRouteSegment[] = [
+  {
+    id: "kix-to-kyoto",
+    dayRange: "Day 1-2",
+    from: "關西機場",
+    to: "京都",
+    transport: "Haruka + 計程車",
+    duration: "約 90-110 分鐘",
+    comfort: "第一晚住機場旁，隔天再進京都，避免紅眼班機後直接拉車。",
+    seniorTip: "京都車站到飯店建議叫計程車，不拖大行李走地下街。",
+  },
+  {
+    id: "kyoto-to-kanazawa",
+    dayRange: "Day 4",
+    from: "京都",
+    to: "金澤",
+    transport: "Thunderbird 京都/大阪方向 → 敦賀 + 北陸新幹線 敦賀 → 金澤",
+    duration: "約 2.5-3 小時",
+    comfort: "上午輕裝出發，敦賀轉乘抓寬；抵達金澤後只安排短散步與休息。",
+    seniorTip: "大件行李建議宅配到山中溫泉，金澤只帶一晚小包。",
+  },
+  {
+    id: "kanazawa-to-yamanaka",
+    dayRange: "Day 5",
+    from: "金澤",
+    to: "山中溫泉",
+    transport: "JR + 溫泉接駁",
+    duration: "約 70-90 分鐘",
+    comfort: "只安排鶴仙溪與溫泉旅館，下午提早入住慢慢泡湯。",
+    seniorTip: "若遇雨或楓葉人潮多，可直接從加賀溫泉站搭計程車進旅館。",
+  },
+  {
+    id: "yamanaka-to-shinosaka",
+    dayRange: "Day 7",
+    from: "山中溫泉",
+    to: "新大阪",
+    transport: "加賀溫泉 → 敦賀：北陸新幹線；敦賀 → 新大阪：Thunderbird",
+    duration: "約 3 小時",
+    comfort: "最後一段回大阪不再插太多景點，以購物、整理行李為主。",
+    seniorTip: "宅配優先，若帶上車請依 JR-WEST 官方最新規則確認。",
+  },
+  {
+    id: "shinosaka-to-kix",
+    dayRange: "Day 8",
+    from: "新大阪",
+    to: "關西機場",
+    transport: "JR 或機場交通",
+    duration: "約 60-90 分鐘",
+    comfort: "回程日只安排機場移動、報到與托運，不增加市區景點。",
+    seniorTip: "早餐後先確認護照、藥品與行李重量，提早到機場等候。",
+  },
+];
+
+export const mapHighlights: MapHighlight[] = [
+  {
+    id: "kyoto-temple-autumn",
+    title: "京都寺院紅葉",
+    area: "kyoto",
+    description: "以白天庭園散策為主，夜楓維持 optional。",
+    stay: "半天到一天",
+    taxiRecommended: true,
+  },
+  {
+    id: "kenrokuen",
+    title: "金澤兼六園",
+    area: "kanazawa",
+    description: "動線集中、休息點多，適合安排成金澤主景點。",
+    stay: "90-120 分鐘",
+    taxiRecommended: false,
+  },
+  {
+    id: "kakusenkei",
+    title: "山中溫泉鶴仙溪",
+    area: "yamanaka-onsen",
+    description: "溪谷賞楓配溫泉旅館，節奏最適合孝親慢旅。",
+    stay: "下午 + 一晚",
+    taxiRecommended: true,
+  },
+];
