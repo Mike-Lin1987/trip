@@ -105,15 +105,23 @@ describe("googleDrivePhotoService", () => {
     expect(init.headers.Authorization).toBe("Bearer token-123");
   });
 
-  it("creates missing Drive folders under the album root", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        id: "folder-unsorted",
-        name: "98_待整理照片",
-        mimeType: DRIVE_FOLDER_MIME_TYPE,
-      }),
-    });
+  it("creates missing Drive folders only after checking for an existing folder", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          files: [],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: "folder-unsorted",
+          name: "98_待整理照片",
+          mimeType: DRIVE_FOLDER_MIME_TYPE,
+        }),
+      });
     const service = createGoogleDrivePhotoService({
       accessToken: "token-123",
       fetchImpl: fetchMock,
@@ -125,17 +133,61 @@ describe("googleDrivePhotoService", () => {
     );
 
     expect(createdFolder.id).toBe("folder-unsorted");
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
 
-    const [requestUrl, init] = fetchMock.mock.calls[0];
-    expect(requestUrl.toString()).toContain("https://www.googleapis.com/drive/v3/files");
-    expect(init.method).toBe("POST");
-    expect(init.headers.Authorization).toBe("Bearer token-123");
-    expect(JSON.parse(init.body)).toEqual({
+    const [lookupUrl, lookupInit] = fetchMock.mock.calls[0];
+    expect(lookupUrl.toString()).toContain("https://www.googleapis.com/drive/v3/files");
+    expect(new URL(lookupUrl.toString()).searchParams.get("q")).toContain(
+      "name = '98_待整理照片'",
+    );
+    expect(lookupInit.headers.Authorization).toBe("Bearer token-123");
+
+    const [createUrl, createInit] = fetchMock.mock.calls[1];
+    expect(createUrl.toString()).toContain("https://www.googleapis.com/drive/v3/files");
+    expect(createInit.method).toBe("POST");
+    expect(createInit.headers.Authorization).toBe("Bearer token-123");
+    expect(JSON.parse(createInit.body)).toEqual({
       name: "98_待整理照片",
       mimeType: DRIVE_FOLDER_MIME_TYPE,
       parents: ["root-folder"],
     });
+  });
+
+  it("reuses an existing Drive folder instead of creating a duplicate", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        files: [
+          {
+            id: "existing-day02",
+            name: "Day02_2026-11-15_京都東寺伏見稻荷",
+            mimeType: DRIVE_FOLDER_MIME_TYPE,
+            webViewLink: "https://drive.google.com/drive/folders/existing-day02",
+          },
+        ],
+      }),
+    });
+    const service = createGoogleDrivePhotoService({
+      accessToken: "token-123",
+      fetchImpl: fetchMock,
+    });
+
+    const [folder] = await service.getOrCreateMissingFolders("root-folder", [
+      {
+        key: "day2",
+        label: "Day 2",
+        name: "Day02_2026-11-15_京都東寺伏見稻荷",
+      },
+    ]);
+
+    expect(folder).toEqual({
+      id: "existing-day02",
+      name: "Day02_2026-11-15_京都東寺伏見稻荷",
+      mimeType: DRIVE_FOLDER_MIME_TYPE,
+      webViewLink: "https://drive.google.com/drive/folders/existing-day02",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][1].method).toBeUndefined();
   });
 
   it("uploads a photo file to the selected Drive folder with multipart metadata", async () => {

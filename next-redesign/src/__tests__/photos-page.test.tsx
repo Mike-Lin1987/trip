@@ -272,5 +272,11 @@ describe("travel photo journal", () => {
         "掃描不到既有子資料夾時，請重新連接 Google Drive 後再掃描一次。",
       ),
     ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Drive 進階設定" }));
+
+    expect(
+      screen.getByRole("button", { name: "建立缺漏資料夾" }),
+    ).toBeDisabled();
   });
 });

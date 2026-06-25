@@ -766,6 +766,7 @@ function DriveStatusPanel({
   const shouldShowEmptyScanHint = Boolean(
     scanResult && scanResult.scannedFolderCount === 0 && missingFolderCount > 0,
   );
+  const shouldBlockMissingFolderCreation = shouldShowEmptyScanHint;
   const driveOpenUrl = rootFolderId ? buildDriveOpenUrl(rootFolderId) : "";
   const effectiveGoogleClientId =
     configuredGoogleClientId || browserGoogleClientId.trim();
@@ -846,6 +847,11 @@ function DriveStatusPanel({
       return;
     }
 
+    if (shouldBlockMissingFolderCreation) {
+      setDriveError("請先重新連接 Google Drive 並掃描資料夾，確認既有資料夾是否可讀取。");
+      return;
+    }
+
     const token = accessToken ?? (await connectGoogleDrive());
 
     if (!token) {
@@ -857,11 +863,11 @@ function DriveStatusPanel({
 
     try {
       const service = createGoogleDrivePhotoService({ accessToken: token });
-      const createdFolders = await service.getOrCreateMissingFolders(
+      const resolvedFolders = await service.getOrCreateMissingFolders(
         scanResult.rootFolderId,
         scanResult.missingFolders,
       );
-      const folders = [...scanResult.folders, ...createdFolders];
+      const folders = [...scanResult.folders, ...resolvedFolders];
       const dayFolderMap = buildDayFolderMap(folders);
       const nextResult: PhotoDriveScanResult = {
         ...scanResult,
@@ -873,7 +879,7 @@ function DriveStatusPanel({
       };
       onScanResultChange(nextResult);
       writeStoredDriveScanResult(window.localStorage, nextResult);
-      setDriveStatusMessage(`已建立 ${createdFolders.length} 個缺漏資料夾。`);
+      setDriveStatusMessage(`已確認 ${resolvedFolders.length} 個缺漏資料夾。`);
     } catch (error) {
       setDriveError(error instanceof Error ? error.message : "建立缺漏資料夾失敗。");
     } finally {
@@ -999,7 +1005,16 @@ function DriveStatusPanel({
                   type="button"
                   variant="outline"
                   className="min-h-11 rounded-[8px]"
-                  disabled={isDriveBusy || missingFolderCount === 0}
+                  disabled={
+                    isDriveBusy ||
+                    missingFolderCount === 0 ||
+                    shouldBlockMissingFolderCreation
+                  }
+                  title={
+                    shouldBlockMissingFolderCreation
+                      ? "請先重新連接 Google Drive 並掃描資料夾。"
+                      : undefined
+                  }
                   onClick={() => {
                     void createMissingFolders();
                   }}

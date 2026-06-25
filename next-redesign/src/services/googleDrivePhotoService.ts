@@ -233,6 +233,15 @@ export function createGoogleDrivePhotoService({
 
       return Promise.all(
         missingFolders.map(async (folder) => {
+          const existingFolder = await findExistingRequiredFolder(
+            normalizedRootFolderId,
+            folder.name,
+          );
+
+          if (existingFolder) {
+            return existingFolder;
+          }
+
           const url = new URL("https://www.googleapis.com/drive/v3/files");
           url.searchParams.set("fields", "id,name,mimeType,webViewLink");
 
@@ -293,6 +302,27 @@ export function createGoogleDrivePhotoService({
       return normalizeUploadedDriveFile(await response.json());
     },
   };
+
+  async function findExistingRequiredFolder(
+    rootFolderId: string,
+    folderName: string,
+  ): Promise<PhotoDriveFolder | null> {
+    const url = new URL("https://www.googleapis.com/drive/v3/files");
+    url.searchParams.set(
+      "q",
+      `'${escapeDriveQuery(rootFolderId)}' in parents and trashed = false and mimeType = '${DRIVE_FOLDER_MIME_TYPE}' and name = '${escapeDriveQuery(folderName)}'`,
+    );
+    url.searchParams.set("fields", "files(id,name,mimeType,webViewLink)");
+    url.searchParams.set("pageSize", "1");
+    url.searchParams.set("spaces", "drive");
+    url.searchParams.set("supportsAllDrives", "true");
+    url.searchParams.set("includeItemsFromAllDrives", "true");
+
+    const result = await requestDrive<DriveFilesListResponse>(url);
+    const [existingFolder] = normalizeDriveFolders(result.files ?? []);
+
+    return existingFolder ?? null;
+  }
 }
 
 export async function requestGoogleDriveAccessToken({
