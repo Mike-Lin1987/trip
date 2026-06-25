@@ -19,8 +19,20 @@ describe("offline itinerary cache policy", () => {
     expect(source).toContain("hokuriku-itinerary");
   });
 
-  it("pre-caches only installable trip reading routes and static PWA assets", () => {
+  it("pre-caches static PWA assets but not protected HTML routes", () => {
     const source = readServiceWorkerSource();
+    const precacheBlock = source.match(/const PRECACHE_URLS = \[([\s\S]*?)\];/)?.[1];
+
+    expect(precacheBlock).toBeDefined();
+    for (const route of [
+      "/manifest.webmanifest",
+      "/pwa-icon-192.png",
+      "/pwa-icon-512.png",
+      "/pwa-maskable-512.png",
+      "/apple-touch-icon.png",
+    ]) {
+      expect(precacheBlock).toContain(`"${route}"`);
+    }
 
     for (const route of [
       "/",
@@ -35,13 +47,8 @@ describe("offline itinerary cache policy", () => {
       "/itinerary/day-8",
       "/hotels",
       "/transport",
-      "/manifest.webmanifest",
-      "/pwa-icon-192.png",
-      "/pwa-icon-512.png",
-      "/pwa-maskable-512.png",
-      "/apple-touch-icon.png",
     ]) {
-      expect(source).toContain(`"${route}"`);
+      expect(precacheBlock).not.toContain(`"${route}"`);
     }
   });
 
@@ -61,26 +68,25 @@ describe("offline itinerary cache policy", () => {
     }
   });
 
-  it("serves HTML with network-first fallback and static assets with cache-first", () => {
+  it("serves static assets with cache-first and avoids protected HTML caching", () => {
     const source = readServiceWorkerSource();
 
-    expect(source).toContain("networkFirst");
+    expect(source).not.toContain("networkFirst");
+    expect(source).not.toContain("HTML_CACHE_PATHS");
     expect(source).toContain("cacheFirst");
     expect(source).toContain("_next/static");
   });
 
-  it("configures Firebase headers so sw.js is never cached by the browser", () => {
-    const firebaseConfig = JSON.parse(
-      readFileSync(path.join(process.cwd(), "firebase.json"), "utf8"),
+  it("configures Vercel headers so sw.js is never cached by the browser", () => {
+    const vercelConfig = JSON.parse(
+      readFileSync(path.join(process.cwd(), "vercel.json"), "utf8"),
     ) as {
-      hosting: {
-        headers?: Array<{
-          source: string;
-          headers: Array<{ key: string; value: string }>;
-        }>;
-      };
+      headers?: Array<{
+        source: string;
+        headers: Array<{ key: string; value: string }>;
+      }>;
     };
-    const swHeaders = firebaseConfig.hosting.headers?.find(
+    const swHeaders = vercelConfig.headers?.find(
       (entry) => entry.source === "/sw.js",
     );
 

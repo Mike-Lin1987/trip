@@ -50,6 +50,7 @@ import {
   type TripMember,
 } from "@/features/accounting/types";
 import {
+  ACCOUNTING_DB_TRIP_ID,
   DEFAULT_JPY_TO_TWD_RATE,
   formatJpyToTwdRate,
 } from "@/features/accounting/exchangeRates";
@@ -70,6 +71,8 @@ type ExpenseManagerProps = {
   tripId: string;
   members: TripMember[];
   initialExpenses: LocalExpenseRecord[];
+  persistenceEnabled?: boolean;
+  initialSyncError?: string;
 };
 
 type ExpenseRateType = Extract<RateType, "reference" | "expense_custom">;
@@ -120,11 +123,18 @@ export function ExpenseManager({
   tripId,
   members,
   initialExpenses,
+  persistenceEnabled = false,
+  initialSyncError,
 }: ExpenseManagerProps) {
   const [expenses, setExpenses] = useState(initialExpenses);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(() => createEmptyForm(members));
   const [receiptErrors, setReceiptErrors] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [syncError, setSyncError] = useState<string | undefined>(
+    initialSyncError,
+  );
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | undefined>();
 
   const activeExpenses = useMemo(
     () => sortExpensesForDisplay(expenses.filter((expense) => !expense.deletedAt)),
@@ -196,7 +206,7 @@ export function ExpenseManager({
     }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (
@@ -208,41 +218,77 @@ export function ExpenseManager({
       return;
     }
 
-    const now = new Date().toISOString();
-    const existingExpense = expenses.find((expense) => expense.id === editingId);
-    const expenseId = editingId ?? form.draftExpenseId;
-    const nextExpense = createLocalExpense({
-      draft: buildDraft({
-        form,
-        tripId,
-        originalAmount: preview.originalAmount,
-        convertedAmount: preview.convertedAmount,
-        appliedExchangeRate: preview.appliedExchangeRate,
-      }),
-      members,
-      id: expenseId,
-      now,
-      receipts: form.receipts,
-      ocrStatus: form.ocrStatus,
-      ocrResults: form.confirmedOcrResult ? [form.confirmedOcrResult] : [],
+    const draft = buildDraft({
+      form,
+      tripId,
+      originalAmount: preview.originalAmount,
+      convertedAmount: preview.convertedAmount,
+      appliedExchangeRate: preview.appliedExchangeRate,
     });
-    const savedExpense = existingExpense
-      ? {
-          ...nextExpense,
-          createdAt: existingExpense.createdAt,
-        }
-      : nextExpense;
+    const ocrResults = form.confirmedOcrResult ? [form.confirmedOcrResult] : [];
 
-    setExpenses((current) =>
-      editingId
-        ? current.map((expense) =>
-            expense.id === editingId ? savedExpense : expense,
-          )
-        : [savedExpense, ...current],
-    );
-    setEditingId(null);
-    setForm(createEmptyForm(members));
-    setReceiptErrors([]);
+    if (!persistenceEnabled) {
+      const now = new Date().toISOString();
+      const existingExpense = expenses.find((expense) => expense.id === editingId);
+      const expenseId = editingId ?? form.draftExpenseId;
+      const nextExpense = createLocalExpense({
+        draft,
+        members,
+        id: expenseId,
+        now,
+        receipts: form.receipts,
+        ocrStatus: form.ocrStatus,
+        ocrResults,
+      });
+      const savedExpense = existingExpense
+        ? {
+            ...nextExpense,
+            createdAt: existingExpense.createdAt,
+          }
+        : nextExpense;
+
+      setExpenses((current) =>
+        editingId
+          ? current.map((expense) =>
+              expense.id === editingId ? savedExpense : expense,
+            )
+          : [savedExpense, ...current],
+      );
+      setEditingId(null);
+      setForm(createEmptyForm(members));
+      setReceiptErrors([]);
+      return;
+    }
+
+    setIsSaving(true);
+    setSyncError(undefined);
+
+    try {
+      const savedExpense = await saveExpenseToApi({
+        tripId,
+        expenseId: editingId,
+        draft,
+        receipts: form.receipts,
+        ocrStatus: form.ocrStatus,
+        ocrResults,
+      });
+
+      setExpenses((current) =>
+        editingId
+          ? current.map((expense) =>
+              expense.id === editingId ? savedExpense : expense,
+            )
+          : [savedExpense, ...current],
+      );
+      setEditingId(null);
+      setForm(createEmptyForm(members));
+      setReceiptErrors([]);
+      setLastSyncedAt(new Date().toISOString());
+    } catch (error) {
+      setSyncError(formatPersistenceError(error));
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function startEditing(expense: LocalExpenseRecord) {
@@ -273,9 +319,35 @@ export function ExpenseManager({
     setReceiptErrors([]);
   }
 
-  function deleteExpense(expense: LocalExpenseRecord) {
+  async function deleteExpense(expense: LocalExpenseRecord) {
     if (window.confirm(`確定刪除「${expense.itemName}」？`)) {
-      setExpenses((current) => softDeleteExpense(current, expense.id));
+      if (!persistenceEnabled) {
+        setExpenses((current) => softDeleteExpense(current, expense.id));
+        return;
+      }
+
+      setIsSaving(true);
+      setSyncError(undefined);
+
+      try {
+        const response = await fetch(
+          `/api/accounting/${encodeURIComponent(tripId)}/expenses/${encodeURIComponent(
+            expense.id,
+          )}`,
+          { method: "DELETE" },
+        );
+
+        if (!response.ok) {
+          throw new Error(await readApiError(response));
+        }
+
+        setExpenses((current) => softDeleteExpense(current, expense.id));
+        setLastSyncedAt(new Date().toISOString());
+      } catch (error) {
+        setSyncError(formatPersistenceError(error));
+      } finally {
+        setIsSaving(false);
+      }
     }
   }
 
@@ -298,7 +370,7 @@ export function ExpenseManager({
       const nextReceipts = validation.accepted.map((file, index) =>
         buildLocalReceipt({
           file,
-          tripId,
+          tripId: ACCOUNTING_DB_TRIP_ID,
           expenseId: current.draftExpenseId,
           expenseDate: current.expenseDate,
           receiptId: createClientId("receipt"),
@@ -410,6 +482,23 @@ export function ExpenseManager({
             <CardDescription className="text-[15px] leading-7">
               五人旅遊共同記帳，金額以 JPY 輸入並換算成 TWD 結算。
             </CardDescription>
+            <div
+              className={`rounded-[8px] px-3 py-2 text-[14px] font-semibold ${
+                syncError
+                  ? "border border-[#e5b2a8] bg-[#fff4f1] text-[#9a3428]"
+                  : persistenceEnabled
+                    ? "border border-[#d7e0ce] bg-[#f5f8f1] text-[#4f6540]"
+                    : "border border-[#e6d8c3] bg-[#f8f4ec] text-[#5f5549]"
+              }`}
+              role={syncError ? "alert" : "status"}
+            >
+              {syncError ??
+                (persistenceEnabled
+                  ? lastSyncedAt
+                    ? "已同步到雲端。"
+                    : "雲端記帳已啟用。"
+                  : "目前為本機暫存模式。")}
+            </div>
           </CardHeader>
           <CardContent>
             <form className="grid gap-4" onSubmit={handleSubmit}>
@@ -913,11 +1002,12 @@ export function ExpenseManager({
                   type="submit"
                   className="min-h-11 px-4"
                   disabled={
+                    isSaving ||
                     form.participantMemberIds.length === 0 ||
                     Boolean(preview.splitError)
                   }
                 >
-                  {editingId ? "更新消費" : "儲存消費"}
+                  {isSaving ? "儲存中..." : editingId ? "更新消費" : "儲存消費"}
                 </Button>
                 {editingId ? (
                   <Button
@@ -925,6 +1015,7 @@ export function ExpenseManager({
                     variant="outline"
                     className="min-h-11 px-4"
                     onClick={cancelEditing}
+                    disabled={isSaving}
                   >
                     取消編輯
                   </Button>
@@ -1004,7 +1095,9 @@ export function ExpenseManager({
               <CardContent className="py-8 text-[16px] font-semibold leading-7 text-[#5f5549]">
                 <p>目前沒有公開記帳資料。</p>
                 <p>
-                  旅途中新增的消費會只在此裝置的畫面狀態中顯示；正式同步前不預載私人支出。
+                  {persistenceEnabled
+                    ? "旅途中新增的消費會同步保存，可在其他裝置重新開啟查看。"
+                    : "旅途中新增的消費會只在此裝置的畫面狀態中顯示；正式同步前不預載私人支出。"}
                 </p>
               </CardContent>
             </Card>
@@ -1061,6 +1154,7 @@ export function ExpenseManager({
                     size="icon"
                     aria-label={`編輯 ${expense.itemName}`}
                     onClick={() => startEditing(expense)}
+                    disabled={isSaving}
                   >
                     <Pencil className="size-4" />
                   </Button>
@@ -1070,6 +1164,7 @@ export function ExpenseManager({
                     size="icon"
                     aria-label={`刪除 ${expense.itemName}`}
                     onClick={() => deleteExpense(expense)}
+                    disabled={isSaving}
                   >
                     <Trash2 className="size-4" />
                   </Button>
@@ -1577,4 +1672,114 @@ function createClientId(prefix: string): string {
 
 function normalizeExpenseRateType(rateType: RateType): ExpenseRateType {
   return rateType === "expense_custom" ? "expense_custom" : "reference";
+}
+
+async function saveExpenseToApi({
+  tripId,
+  expenseId,
+  draft,
+  receipts,
+  ocrStatus,
+  ocrResults,
+}: {
+  tripId: string;
+  expenseId: string | null;
+  draft: ExpenseDraft;
+  receipts: LocalReceipt[];
+  ocrStatus: OcrStatus;
+  ocrResults: LocalReceiptOcrResult[];
+}): Promise<LocalExpenseRecord> {
+  const response = await fetch(
+    expenseId
+      ? `/api/accounting/${encodeURIComponent(tripId)}/expenses/${encodeURIComponent(
+          expenseId,
+        )}`
+      : `/api/accounting/${encodeURIComponent(tripId)}/expenses`,
+    {
+      method: expenseId ? "PUT" : "POST",
+      body: buildExpenseFormData({
+        draft,
+        receipts,
+        ocrStatus,
+        ocrResults,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(await readApiError(response));
+  }
+
+  const data = (await response.json()) as { expense?: LocalExpenseRecord };
+  if (!data.expense) {
+    throw new Error("API did not return a saved expense.");
+  }
+
+  return data.expense;
+}
+
+function buildExpenseFormData({
+  draft,
+  receipts,
+  ocrStatus,
+  ocrResults,
+}: {
+  draft: ExpenseDraft;
+  receipts: LocalReceipt[];
+  ocrStatus: OcrStatus;
+  ocrResults: LocalReceiptOcrResult[];
+}) {
+  const formData = new FormData();
+  const receiptPayload = receipts.map((receipt, index) => {
+    const { file, ...serializableReceipt } = receipt;
+    const fileFieldName = file ? `receipt-file-${index}` : undefined;
+
+    if (file && fileFieldName) {
+      formData.append(fileFieldName, file, file.name);
+    }
+
+    return {
+      ...serializableReceipt,
+      fileFieldName,
+    };
+  });
+
+  formData.set(
+    "payload",
+    JSON.stringify({
+      draft,
+      receipts: receiptPayload,
+      ocrStatus,
+      ocrResults,
+    }),
+  );
+
+  return formData;
+}
+
+async function readApiError(response: Response) {
+  try {
+    const data = (await response.json()) as { error?: unknown };
+    if (typeof data.error === "string" && data.error.trim()) {
+      return data.error;
+    }
+  } catch {
+    // Fall through to a generic message.
+  }
+
+  return `Request failed with status ${response.status}.`;
+}
+
+function formatPersistenceError(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (message.includes("unauthorized")) {
+    return "登入已過期，請重新輸入旅行密碼後再儲存。";
+  }
+
+  if (message.includes("Failed to fetch")) {
+    return "網路連線失敗，請確認連線後再儲存。";
+  }
+
+  return message || "雲端記帳儲存失敗，請稍後再試。";
 }

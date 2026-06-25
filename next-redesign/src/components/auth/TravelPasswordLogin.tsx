@@ -1,35 +1,18 @@
 "use client";
 
-import {
-  useState,
-  useSyncExternalStore,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { LockKeyhole, MapPinned, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  TRAVEL_PASSWORD_HASH,
-  TRAVEL_PASSWORD_STORAGE_KEY,
-  verifyTravelPassword,
-} from "@/lib/travel-password";
+import { getSafeNextPath } from "@/lib/safe-next-path";
 
-type TravelPasswordGateProps = {
-  children: ReactNode;
-  expectedPasswordHash?: string;
+type TravelPasswordLoginProps = {
+  nextPath?: string;
 };
 
-const passwordSessionEvent = "travel-password-session-change";
-
-export function TravelPasswordGate({
-  children,
-  expectedPasswordHash = TRAVEL_PASSWORD_HASH,
-}: TravelPasswordGateProps) {
-  const gateState = useSyncExternalStore(
-    subscribeToPasswordSession,
-    getPasswordSessionSnapshot,
-    getServerPasswordSessionSnapshot,
-  );
+export function TravelPasswordLogin({ nextPath = "/" }: TravelPasswordLoginProps) {
+  const router = useRouter();
+  const safeNextPath = getSafeNextPath(nextPath);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,27 +27,30 @@ export function TravelPasswordGate({
     setIsSubmitting(true);
 
     try {
-      const isUnlocked = await verifyTravelPassword(
-        password,
-        expectedPasswordHash,
-      );
+      const response = await fetch("/api/travel-session", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      });
 
-      if (isUnlocked) {
-        window.localStorage.setItem(TRAVEL_PASSWORD_STORAGE_KEY, "unlocked");
-        window.dispatchEvent(new Event(passwordSessionEvent));
+      if (response.ok) {
+        router.replace(safeNextPath);
+        router.refresh();
         return;
       }
 
-      setError("密碼不正確，請再確認。");
+      setError(
+        response.status === 503
+          ? "網站密碼尚未完成伺服器設定，請稍後再試。"
+          : "密碼不正確，請再確認。",
+      );
     } catch {
-      setError("此瀏覽器暫時無法驗證密碼，請換一個瀏覽器再試。");
+      setError("目前無法連線驗證密碼，請稍後再試。");
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (gateState === "unlocked") {
-    return <>{children}</>;
   }
 
   return (
@@ -109,11 +95,8 @@ export function TravelPasswordGate({
 
           <Button
             className="h-12 rounded-[8px] bg-[#a33a2b] text-[16px] font-bold text-white hover:bg-[#8d2f23]"
-            type="button"
+            type="submit"
             disabled={isSubmitting || !password.trim()}
-            onClick={() => {
-              void submitPassword();
-            }}
           >
             {isSubmitting ? "確認中" : "進入旅程"}
           </Button>
@@ -132,24 +115,4 @@ export function TravelPasswordGate({
       </section>
     </main>
   );
-}
-
-function subscribeToPasswordSession(onStoreChange: () => void) {
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(passwordSessionEvent, onStoreChange);
-
-  return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(passwordSessionEvent, onStoreChange);
-  };
-}
-
-function getPasswordSessionSnapshot() {
-  return window.localStorage.getItem(TRAVEL_PASSWORD_STORAGE_KEY) === "unlocked"
-    ? "unlocked"
-    : "locked";
-}
-
-function getServerPasswordSessionSnapshot() {
-  return "locked";
 }

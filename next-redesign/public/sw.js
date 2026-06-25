@@ -1,40 +1,13 @@
-const CACHE_VERSION = "2026-06-25-v1";
+const CACHE_VERSION = "2026-06-25-v2";
 const CACHE_NAME = `hokuriku-itinerary-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
-  "/",
-  "/itinerary",
-  "/itinerary/day-1",
-  "/itinerary/day-2",
-  "/itinerary/day-3",
-  "/itinerary/day-4",
-  "/itinerary/day-5",
-  "/itinerary/day-6",
-  "/itinerary/day-7",
-  "/itinerary/day-8",
-  "/hotels",
-  "/transport",
   "/manifest.webmanifest",
   "/pwa-icon-192.png",
   "/pwa-icon-512.png",
   "/pwa-maskable-512.png",
   "/apple-touch-icon.png",
 ];
-
-const HTML_CACHE_PATHS = new Set([
-  "/",
-  "/itinerary",
-  "/itinerary/day-1",
-  "/itinerary/day-2",
-  "/itinerary/day-3",
-  "/itinerary/day-4",
-  "/itinerary/day-5",
-  "/itinerary/day-6",
-  "/itinerary/day-7",
-  "/itinerary/day-8",
-  "/hotels",
-  "/transport",
-]);
 
 const STATIC_CACHE_PATHS = new Set([
   "/manifest.webmanifest",
@@ -91,11 +64,6 @@ self.addEventListener("fetch", (event) => {
 
   if (url.pathname.startsWith("/_next/static") || STATIC_CACHE_PATHS.has(url.pathname)) {
     event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  if (HTML_CACHE_PATHS.has(normalizePathname(url.pathname))) {
-    event.respondWith(networkFirst(request));
   }
 });
 
@@ -115,36 +83,6 @@ function shouldSkipRequest(request) {
   }
 
   return EXCLUDED_PATH_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
-}
-
-function normalizePathname(pathname) {
-  if (pathname !== "/" && pathname.endsWith("/")) {
-    return pathname.slice(0, -1);
-  }
-
-  return pathname;
-}
-
-async function networkFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-
-  try {
-    const response = await fetch(request);
-
-    if (response.ok) {
-      await cache.put(request, response.clone());
-    }
-
-    return response;
-  } catch {
-    const cached = await cache.match(request);
-
-    if (cached) {
-      return cached;
-    }
-
-    return cache.match("/");
-  }
 }
 
 async function cacheFirst(request) {

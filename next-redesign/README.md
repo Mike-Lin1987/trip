@@ -24,15 +24,16 @@ Google Cloud Console checklist:
 1. Enable Google Drive API.
 2. Create an OAuth Web Client ID for the site origin.
 3. Add Authorized JavaScript origins:
-   - `https://hokuriku-family-trip.web.app`
-   - `http://localhost:3100` for local testing, if needed.
+   - `https://<your-vercel-project>.vercel.app`
+   - your custom Vercel production domain, if configured.
+   - `http://localhost:3000` for local testing, if needed.
 4. Put only the OAuth Client ID in `NEXT_PUBLIC_GOOGLE_CLIENT_ID`, or paste it into the live `/photos` page when the deployed build has no env value.
 5. Do not add a client secret to this static frontend.
 6. Use the narrow Drive scope `https://www.googleapis.com/auth/drive.file`.
 
 ## Using the Live Site Abroad
 
-1. Open `https://hokuriku-family-trip.web.app/photos`.
+1. Open `https://<your-vercel-project>.vercel.app/photos`, or the custom Vercel domain.
 2. Enter the travel password.
 3. Paste the Google OAuth Client ID in `Google OAuth Client ID` if the field is empty.
 4. Confirm the Drive root folder ID is `1p33mX1C8xLeB7P8RvRgMWlFKPqdFeQww`.
@@ -40,7 +41,31 @@ Google Cloud Console checklist:
 
 The OAuth Client ID is browser-safe and can be saved in `localStorage` on the device.
 Google access tokens are short-lived and kept only in browser memory. Never paste or
-ship a client secret in this static frontend.
+ship a client secret in this frontend.
+
+## Travel Password Auth
+
+The travel password is verified on the server. Do not put the shared password or
+its hash in any `NEXT_PUBLIC_` variable or client component.
+
+Set these server-only environment variables before running or deploying:
+
+```env
+TRAVEL_PASSWORD_HASH=your-64-character-sha256-password-hash
+TRAVEL_SESSION_SECRET=replace-with-at-least-32-random-characters
+TRAVEL_SESSION_TTL_SECONDS=1209600
+```
+
+Use PowerShell to generate the password hash:
+
+```powershell
+[System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes("replace-with-travel-password"))).Replace("-", "").ToLowerInvariant()
+```
+
+This app uses Next.js proxy and HttpOnly cookies for the password session, so it
+must be deployed to a runtime that supports Next.js server logic. Do not deploy
+the protected site as a static `out` directory. The deployment target for this
+project is Vercel.
 
 The Drive setup builds `dayFolderMap` for all 11 folders:
 
@@ -70,8 +95,6 @@ npm.cmd run dev
 yarn.cmd dev
 # or
 pnpm.cmd dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -91,6 +114,35 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This repository stores the Next.js app in `next-redesign`. When importing the
+Git repository into Vercel, set **Root Directory** to `next-redesign`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Required Vercel environment variables:
+
+```env
+TRAVEL_PASSWORD_HASH=your-64-character-sha256-password-hash
+TRAVEL_SESSION_SECRET=replace-with-at-least-32-random-characters
+TRAVEL_SESSION_TTL_SECONDS=1209600
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+OPENAI_API_KEY=your-openai-api-key
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-oauth-web-client-id.apps.googleusercontent.com
+NEXT_PUBLIC_GOOGLE_DRIVE_ALBUM_FOLDER_ID=1p33mX1C8xLeB7P8RvRgMWlFKPqdFeQww
+```
+
+CLI deployment from this directory:
+
+```powershell
+vercel.cmd link
+vercel.cmd env add TRAVEL_PASSWORD_HASH production
+vercel.cmd env add TRAVEL_SESSION_SECRET production
+vercel.cmd env add TRAVEL_SESSION_TTL_SECONDS production
+vercel.cmd deploy --prod
+```
+
+Before production deploy, apply the Supabase hardening migration:
+
+```text
+supabase/migrations/202606250001_harden_accounting_policies.sql
+```

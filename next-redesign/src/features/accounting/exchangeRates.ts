@@ -2,6 +2,7 @@ import type { DailyExchangeRate } from "./types";
 import type { ItineraryDay } from "@/types/trip";
 
 export const ACCOUNTING_TRIP_ID = "hokuriku-2026";
+export const ACCOUNTING_DB_TRIP_ID = "7e5f2ef1-f0d9-41e8-a40c-3f9ac0521311";
 export const DEFAULT_JPY_TO_TWD_RATE = 0.215;
 
 export const seedDailyExchangeRates: DailyExchangeRate[] = [

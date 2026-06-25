@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACCOUNTING_TRIP_ID } from "@/features/accounting/exchangeRates";
+import { ACCOUNTING_DB_TRIP_ID } from "@/features/accounting/exchangeRates";
 import {
   RECEIPT_BUCKET,
   analyzeLocalReceipt,
@@ -44,7 +44,7 @@ describe("receipt upload and OCR helpers", () => {
   it("builds private storage metadata with the trip-receipts bucket path", () => {
     const receipt = buildLocalReceipt({
       file: new File(["a"], "kyoto-dinner.jpeg", { type: "image/jpeg" }),
-      tripId: ACCOUNTING_TRIP_ID,
+      tripId: ACCOUNTING_DB_TRIP_ID,
       expenseId: "local-expense",
       expenseDate: "2026-11-16",
       receiptId: "receipt-1",
@@ -56,7 +56,8 @@ describe("receipt upload and OCR helpers", () => {
     expect(receipt).toMatchObject({
       id: "receipt-1",
       storageBucket: RECEIPT_BUCKET,
-      storagePath: "hokuriku-2026/2026/11/local-expense/receipt-1.jpg",
+      storagePath:
+        "7e5f2ef1-f0d9-41e8-a40c-3f9ac0521311/2026/11/local-expense/receipt-1.jpg",
       originalFilename: "kyoto-dinner.jpeg",
       mimeType: "image/jpeg",
       fileSize: 1,
@@ -70,7 +71,7 @@ describe("receipt upload and OCR helpers", () => {
     const receipts = ["a.jpg", "b.jpg", "c.jpg"].map((name, index) =>
       buildLocalReceipt({
         file: new File(["a"], name, { type: "image/jpeg" }),
-        tripId: ACCOUNTING_TRIP_ID,
+        tripId: ACCOUNTING_DB_TRIP_ID,
         expenseId: "local-expense",
         expenseDate: "2026-11-16",
         receiptId: `receipt-${index + 1}`,
@@ -107,7 +108,7 @@ describe("receipt upload and OCR helpers", () => {
   it("keeps OCR server-safe and applies only confirmed result fields to the draft", () => {
     const receipt = buildLocalReceipt({
       file: new File(["a"], "arashiyama-receipt.jpg", { type: "image/jpeg" }),
-      tripId: ACCOUNTING_TRIP_ID,
+      tripId: ACCOUNTING_DB_TRIP_ID,
       expenseId: "local-expense",
       expenseDate: "2026-11-16",
       receiptId: "receipt-1",
@@ -143,7 +144,7 @@ describe("receipt upload and OCR helpers", () => {
       file: new File(["blur"], "blurred-failed-receipt.webp", {
         type: "image/webp",
       }),
-      tripId: ACCOUNTING_TRIP_ID,
+      tripId: ACCOUNTING_DB_TRIP_ID,
       expenseId: "local-expense",
       expenseDate: "2026-11-16",
       receiptId: "receipt-1",

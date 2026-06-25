@@ -31,6 +31,7 @@ export type LocalReceipt = {
   previewUrl: string;
   sortOrder: number;
   createdAt: string;
+  file?: File;
 };
 
 export type LocalReceiptOcrResult = {
@@ -138,6 +139,7 @@ export function buildLocalReceipt({
     previewUrl,
     sortOrder,
     createdAt: now,
+    file,
   };
 }
 

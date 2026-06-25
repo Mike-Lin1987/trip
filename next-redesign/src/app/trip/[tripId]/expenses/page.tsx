@@ -12,9 +12,10 @@ import { PageIntro } from "@/components/layout/SectionHeading";
 import { Button } from "@/components/ui/button";
 import {
   ACCOUNTING_TRIP_ID,
-  seedExpenses,
-  seedTripMembers,
 } from "@/features/accounting/expenses";
+import { loadAccountingState } from "@/features/accounting/server-repository";
+
+export const dynamic = "force-dynamic";
 
 const overviewCards = [
   {
@@ -44,6 +45,7 @@ export default async function ExpensesPage({
   params: Promise<{ tripId: string }>;
 }) {
   const { tripId } = await params;
+  const accountingState = await loadAccountingState(tripId);
 
   return (
     <main className="travel-paper min-h-screen bg-[#f8f4ec] pb-20 md:pb-0">
@@ -101,8 +103,10 @@ export default async function ExpensesPage({
       </section>
       <ExpenseManager
         tripId={tripId}
-        members={seedTripMembers}
-        initialExpenses={seedExpenses}
+        members={accountingState.members}
+        initialExpenses={accountingState.expenses}
+        persistenceEnabled={accountingState.persistenceEnabled}
+        initialSyncError={accountingState.syncError}
       />
     </main>
   );

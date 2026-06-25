@@ -21,10 +21,11 @@ import { itinerary2026 } from "@/data/itinerary-2026";
 import {
   ACCOUNTING_TRIP_ID,
   getMemberName,
-  seedExpenses,
-  seedTripMembers,
 } from "@/features/accounting/expenses";
+import { loadAccountingState } from "@/features/accounting/server-repository";
 import { buildDailyExpenseSummaries } from "@/features/accounting/statistics";
+
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return itinerary2026.map((day) => ({
@@ -39,9 +40,10 @@ export default async function DailyExpensesPage({
   params: Promise<{ tripId: string; date: string }>;
 }) {
   const { tripId, date } = await params;
+  const accountingState = await loadAccountingState(tripId);
   const summaries = buildDailyExpenseSummaries({
-    expenses: seedExpenses,
-    members: seedTripMembers,
+    expenses: accountingState.expenses,
+    members: accountingState.members,
     itineraryDays: itinerary2026,
   });
   const summary =
@@ -177,7 +179,10 @@ export default async function DailyExpensesPage({
                       <SmallFact
                         icon={<Users className="size-4" />}
                         label="付款人"
-                        value={getMemberName(expense.payerMemberId, seedTripMembers)}
+                        value={getMemberName(
+                          expense.payerMemberId,
+                          accountingState.members,
+                        )}
                       />
                       <SmallFact
                         icon={<Users className="size-4" />}

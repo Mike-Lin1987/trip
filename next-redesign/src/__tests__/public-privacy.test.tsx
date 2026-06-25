@@ -1,31 +1,79 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { TravelPasswordGate } from "@/components/auth/TravelPasswordGate";
+// @vitest-environment node
+
+import { webcrypto } from "node:crypto";
+import { beforeEach, describe, expect, it } from "vitest";
+import { NextRequest } from "next/server";
+import { proxy } from "@/proxy";
 import { hashTravelPassword } from "@/lib/travel-password";
+import {
+  createTravelSessionToken,
+  TRAVEL_SESSION_COOKIE_NAME,
+} from "@/lib/travel-session";
 
-describe("travel password privacy gate", () => {
-  it("hides private hotel and flight details until the travel password is entered", async () => {
-    const expectedPasswordHash = await hashTravelPassword("private-trip");
+if (!globalThis.crypto?.subtle) {
+  Object.defineProperty(globalThis, "crypto", {
+    value: webcrypto,
+    configurable: true,
+  });
+}
 
-    render(
-      <TravelPasswordGate expectedPasswordHash={expectedPasswordHash}>
-        <main>
-          <h1>關西機場華盛頓酒店</h1>
-          <p>高雄組 CI176 出發 15:25</p>
-        </main>
-      </TravelPasswordGate>,
+describe("travel password privacy boundary", () => {
+  beforeEach(async () => {
+    process.env.TRAVEL_PASSWORD_HASH = await hashTravelPassword("private-trip");
+    process.env.TRAVEL_SESSION_SECRET =
+      "test-travel-session-secret-32-characters";
+    process.env.TRAVEL_SESSION_TTL_SECONDS = "1209600";
+  });
+
+  it("redirects private routes before page rendering when no session cookie exists", async () => {
+    const response = await proxy(
+      new NextRequest("https://trip.example/hotels?night=1"),
+    );
+    const location = new URL(response.headers.get("location") ?? "");
+
+    expect(location.pathname).toBe("/login");
+    expect(location.searchParams.get("next")).toBe("/hotels?night=1");
+  });
+
+  it("does not trust the old client-side unlock flag", async () => {
+    const response = await proxy(
+      new NextRequest("https://trip.example/hotels", {
+        headers: {
+          cookie: "hokuriku-2026-travel-unlocked=unlocked",
+        },
+      }),
+    );
+    const location = new URL(response.headers.get("location") ?? "");
+
+    expect(location.pathname).toBe("/login");
+    expect(location.searchParams.get("next")).toBe("/hotels");
+  });
+
+  it("allows a request with a signed server session cookie", async () => {
+    const token = await createTravelSessionToken();
+    const response = await proxy(
+      new NextRequest("https://trip.example/hotels", {
+        headers: {
+          cookie: `${TRAVEL_SESSION_COOKIE_NAME}=${token}`,
+        },
+      }),
     );
 
-    expect(screen.getByText("孝親紅葉慢旅")).toBeInTheDocument();
-    expect(screen.queryByText("關西機場華盛頓酒店")).not.toBeInTheDocument();
-    expect(screen.queryByText(/CI176/)).not.toBeInTheDocument();
+    expect(response.headers.get("location")).toBeNull();
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
 
-    fireEvent.change(await screen.findByLabelText("旅行密碼"), {
-      target: { value: "private-trip" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "進入旅程" }));
+  it("redirects authenticated visitors away from the login page", async () => {
+    const token = await createTravelSessionToken();
+    const response = await proxy(
+      new NextRequest("https://trip.example/login", {
+        headers: {
+          cookie: `${TRAVEL_SESSION_COOKIE_NAME}=${token}`,
+        },
+      }),
+    );
+    const location = new URL(response.headers.get("location") ?? "");
 
-    expect(await screen.findByText("關西機場華盛頓酒店")).toBeInTheDocument();
-    expect(screen.getByText(/CI176/)).toBeInTheDocument();
+    expect(location.pathname).toBe("/");
   });
 });

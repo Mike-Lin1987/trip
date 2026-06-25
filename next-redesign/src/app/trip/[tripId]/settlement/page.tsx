@@ -20,9 +20,8 @@ import { SettlementTransferChecklist } from "@/components/accounting/SettlementT
 import { PageIntro } from "@/components/layout/SectionHeading";
 import {
   ACCOUNTING_TRIP_ID,
-  seedExpenses,
-  seedTripMembers,
 } from "@/features/accounting/expenses";
+import { loadAccountingState } from "@/features/accounting/server-repository";
 import { buildSettlementReport } from "@/features/accounting/statistics";
 
 const statusLabels = {
@@ -37,6 +36,8 @@ const statusTone = {
   settled: "bg-[#f8f4ec] text-[#5f5549]",
 } as const;
 
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
   return [{ tripId: ACCOUNTING_TRIP_ID }];
 }
@@ -47,9 +48,10 @@ export default async function SettlementPage({
   params: Promise<{ tripId: string }>;
 }) {
   const { tripId } = await params;
+  const accountingState = await loadAccountingState(tripId);
   const report = buildSettlementReport({
-    expenses: seedExpenses,
-    members: seedTripMembers,
+    expenses: accountingState.expenses,
+    members: accountingState.members,
   });
 
   return (

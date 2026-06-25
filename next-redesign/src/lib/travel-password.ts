@@ -1,7 +1,4 @@
-export const TRAVEL_PASSWORD_STORAGE_KEY = "hokuriku-2026-travel-unlocked";
-
-export const TRAVEL_PASSWORD_HASH =
-  "9c6a838c61fa7f44918fe11f0173070a5be0ec94a56458f0a8d331908ae8c6f2";
+const sha256HexPattern = /^[a-f0-9]{64}$/i;
 
 export async function hashTravelPassword(password: string): Promise<string> {
   const subtle = globalThis.crypto?.subtle;
@@ -20,7 +17,17 @@ export async function hashTravelPassword(password: string): Promise<string> {
 
 export async function verifyTravelPassword(
   password: string,
-  expectedPasswordHash = TRAVEL_PASSWORD_HASH,
+  expectedPasswordHash: string,
 ): Promise<boolean> {
-  return (await hashTravelPassword(password)) === expectedPasswordHash;
+  if (!isValidSha256Hex(expectedPasswordHash)) {
+    return false;
+  }
+
+  return (
+    (await hashTravelPassword(password)) === expectedPasswordHash.trim().toLowerCase()
+  );
+}
+
+export function isValidSha256Hex(value: string | undefined): value is string {
+  return Boolean(value && sha256HexPattern.test(value.trim()));
 }

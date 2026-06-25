@@ -39,6 +39,16 @@ export const expenseDraftSchema = z.object({
   payerMemberId: z.string().uuid(),
   splitMethod: z.enum(SPLIT_METHODS),
   participantMemberIds: z.array(z.string().uuid()).min(1),
+  splitAllocations: z
+    .array(
+      z.object({
+        memberId: z.string().uuid(),
+        amount: z.coerce.number().finite().nonnegative().optional(),
+        percentage: z.coerce.number().finite().nonnegative().optional(),
+        shares: z.coerce.number().finite().nonnegative().optional(),
+      }),
+    )
+    .optional(),
   locationName: optionalTrimmedString,
   latitude: z.coerce.number().finite().optional(),
   longitude: z.coerce.number().finite().optional(),

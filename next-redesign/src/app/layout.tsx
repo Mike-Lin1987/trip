@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { TravelPasswordGate } from "@/components/auth/TravelPasswordGate";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
@@ -50,11 +49,9 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <ServiceWorkerRegistration />
-        <TravelPasswordGate>
-          <SiteHeader />
-          {children}
-          <MobileBottomNav />
-        </TravelPasswordGate>
+        <SiteHeader />
+        {children}
+        <MobileBottomNav />
       </body>
     </html>
   );

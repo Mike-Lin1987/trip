@@ -1,8 +1,8 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const tripId = "hokuriku-2026";
-const travelPasswordStorageKey = "hokuriku-2026-travel-unlocked";
-const travelPasswordSessionEvent = "travel-password-session-change";
+const travelTestPassword =
+  process.env.TRAVEL_TEST_PASSWORD ?? "playwright-trip-password";
 
 test.describe("accounting trip flows", () => {
   test("adds an OCR-backed expense, edits it, and soft deletes it", async ({
@@ -24,12 +24,13 @@ test.describe("accounting trip flows", () => {
       mimeType: "image/jpeg",
       buffer: Buffer.from("receipt"),
     });
-    await page
-      .getByRole("button", { name: "辨識收據 arashiyama-receipt.jpg" })
-      .click();
+    await activateButton(
+      page,
+      page.getByRole("button", { name: "辨識收據 arashiyama-receipt.jpg" }),
+    );
 
     await expect(page.getByText("請確認收據辨識結果")).toBeVisible();
-    await page.getByRole("button", { name: "套用 OCR 結果" }).click();
+    await activateButton(page, page.getByRole("button", { name: "套用 OCR 結果" }));
     await expect(page.getByLabel("店家")).toHaveValue("嵐山茶屋");
     await expect(page.getByLabel("消費日期")).toHaveValue("2026-11-16");
     await expect(page.getByLabel("原始金額 JPY")).toHaveValue("1500");
@@ -47,7 +48,7 @@ test.describe("accounting trip flows", () => {
     await page.getByLabel("林仙化 百分比").fill("10");
     await page.getByLabel("方錦屏 百分比").fill("10");
     await expect(page.getByText("NT$ 176.00").first()).toBeVisible();
-    await page.getByRole("button", { name: "儲存消費" }).click();
+    await activateButton(page, page.getByRole("button", { name: "儲存消費" }));
 
     await expect(page.getByText("收據咖啡", { exact: true })).toBeVisible();
     await expect(
@@ -57,9 +58,9 @@ test.describe("accounting trip flows", () => {
     await expect(page.getByText("NT$ 352.00").first()).toBeVisible();
     await expect(page.getByText("百分比", { exact: true }).last()).toBeVisible();
 
-    await page.getByRole("button", { name: "編輯 收據咖啡" }).click();
+    await activateButton(page, page.getByRole("button", { name: "編輯 收據咖啡" }));
     await page.getByLabel("購買項目").fill("收據咖啡修正");
-    await page.getByRole("button", { name: "更新消費" }).click();
+    await activateButton(page, page.getByRole("button", { name: "更新消費" }));
 
     await expect(
       page.getByText("收據咖啡修正", { exact: true }),
@@ -69,7 +70,7 @@ test.describe("accounting trip flows", () => {
       expect(dialog.message()).toContain("收據咖啡修正");
       await dialog.accept();
     });
-    await page.getByRole("button", { name: "刪除 收據咖啡修正" }).click();
+    await activateButton(page, page.getByRole("button", { name: "刪除 收據咖啡修正" }));
 
     await expect(
       page.getByText("收據咖啡修正", { exact: true }),
@@ -100,22 +101,25 @@ test.describe("accounting trip flows", () => {
 });
 
 async function gotoUnlocked(page: Page, path: string) {
-  await page.goto("/");
-  await page.evaluate((storageKey) => {
-    window.localStorage.setItem(storageKey, "unlocked");
-  }, travelPasswordStorageKey);
+  await page.goto(path);
+  await expect(page).toHaveURL(/\/login\?next=/);
+  await page.getByLabel("旅行密碼").fill(travelTestPassword);
+  const sessionResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/travel-session") &&
+      response.request().method() === "POST",
+  );
+  await activateButton(page, page.getByRole("button", { name: "進入旅程" }));
+  expect((await sessionResponse).status()).toBe(200);
+  await expect(page).toHaveURL(new RegExp(`${escapeRegExp(path)}$`));
+}
 
-  await page.goto(`${new URL(page.url()).origin}${path}`);
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    await page.evaluate((eventName) => {
-      window.dispatchEvent(new Event(eventName));
-    }, travelPasswordSessionEvent);
-
-    if ((await page.locator("#travel-password").count()) === 0) {
-      return;
-    }
-
-    await page.waitForTimeout(100);
-  }
+async function activateButton(page: Page, button: Locator) {
+  await button.scrollIntoViewIfNeeded();
+  await button.focus();
+  await page.keyboard.press("Enter");
 }
