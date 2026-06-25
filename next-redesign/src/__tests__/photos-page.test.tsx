@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import PhotosPage from "@/app/photos/page";
 import { siteNavItems } from "@/data/navigation";
 import { GOOGLE_DRIVE_ALBUM_STORAGE_KEY } from "@/services/googleDrivePhotoService";
@@ -9,6 +9,17 @@ describe("travel photo journal", () => {
   beforeEach(() => {
     window.localStorage.clear();
   });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function getPhotoStatValue(label: string) {
+    const labelElement = screen.getByText(label);
+    const card = labelElement.closest("div");
+
+    return card?.querySelector("p")?.textContent;
+  }
 
   it("adds the memoir album entry to travel navigation and homepage cards", () => {
     const photoEntry = siteNavItems.find((item) => item.href === "/photos");
@@ -165,7 +176,34 @@ describe("travel photo journal", () => {
       ),
     ).toBe(false);
 
-    confirmSpy.mockRestore();
+  });
+
+  it("updates the top photo statistics after removing a photo", async () => {
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(<PhotosPage />);
+
+    await waitFor(() => {
+      expect(window.localStorage.getItem(PHOTO_METADATA_STORAGE_KEY)).not.toBeNull();
+    });
+
+    expect(getPhotoStatValue("照片總數")).toBe("6");
+    expect(getPhotoStatValue("已整理照片數")).toBe("4");
+
+    fireEvent.click(screen.getAllByRole("button", { name: "從相簿移除" })[0]);
+
+    await waitFor(() => {
+      expect(screen.queryByText("東寺紅葉與五重塔")).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(getPhotoStatValue("照片總數")).toBe("5");
+      expect(getPhotoStatValue("已整理照片數")).toBe("3");
+    });
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "要從相簿移除「東寺紅葉與五重塔」嗎？Google Drive 原始檔會保留。",
+    );
   });
 
   it("shows Google Drive folder binding status from the saved scan result", async () => {

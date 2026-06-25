@@ -51,6 +51,7 @@ import {
 } from "@/services/googleDrivePhotoService";
 import {
   createLocalStoragePhotoMetadataRepository,
+  PHOTO_METADATA_STORAGE_KEY,
   type PhotoMetadataRepository,
 } from "@/services/photoMetadataRepository";
 import {
@@ -76,6 +77,7 @@ type PhotoJournalProps = {
   tabs: Array<{ id: PhotoTabId; label: string }>;
   driveStatus: PhotoDriveConnectionStatus;
   initialDriveScanResult?: PhotoDriveScanResult;
+  onPhotosChange?: (photos: PhotoRecord[]) => void;
 };
 
 type UploadPreview = {
@@ -135,6 +137,7 @@ export function PhotoJournal({
   tabs,
   driveStatus,
   initialDriveScanResult,
+  onPhotosChange,
 }: PhotoJournalProps) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [activeTab, setActiveTab] = useState<PhotoTabId>("date");
@@ -166,6 +169,8 @@ export function PhotoJournal({
       window.localStorage,
     );
     let isActive = true;
+    const hasStoredPhotoMetadata =
+      window.localStorage.getItem(PHOTO_METADATA_STORAGE_KEY) !== null;
 
     metadataRepositoryRef.current = repository;
 
@@ -183,7 +188,7 @@ export function PhotoJournal({
           (photo) => !deletedPhotoIdsRef.current.has(photo.id),
         );
 
-        if (storedPhotos.length > 0) {
+        if (hasStoredPhotoMetadata) {
           setPhotos(visibleStoredPhotos);
         } else {
           await Promise.all(
@@ -209,14 +214,27 @@ export function PhotoJournal({
   }, [initialPhotos]);
 
   useEffect(() => {
+    onPhotosChange?.(photos);
+  }, [onPhotosChange, photos]);
+
+  useEffect(() => {
     if (!metadataRepositoryReady || !metadataRepositoryRef.current) {
       return;
     }
 
     const repository = metadataRepositoryRef.current;
+    const visiblePhotos = photos.filter(
+      (photo) => !deletedPhotoIdsRef.current.has(photo.id),
+    );
+    const deletedPhotoIds = Array.from(deletedPhotoIdsRef.current);
 
     void Promise.all(
-      photos.map((photo) => repository.savePhotoMetadata(photo)),
+      [
+        ...visiblePhotos.map((photo) => repository.savePhotoMetadata(photo)),
+        ...deletedPhotoIds.map((photoId) =>
+          repository.deletePhotoMetadata(photoId),
+        ),
+      ],
     );
   }, [metadataRepositoryReady, photos]);
 
