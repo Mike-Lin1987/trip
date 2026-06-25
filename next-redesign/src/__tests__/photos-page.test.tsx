@@ -233,12 +233,44 @@ describe("travel photo journal", () => {
     render(<PhotosPage />);
 
     expect(await screen.findByText("Drive 已設定")).toBeInTheDocument();
-    expect(screen.getByText("已建立 4 個資料夾對應，缺少 1 個資料夾。")).toBeInTheDocument();
+    expect(screen.getByText("已建立 4 個資料夾對應，缺少 7 個資料夾。")).toBeInTheDocument();
     expect(screen.queryByDisplayValue("1p33mX1C8xLeB7P8RvRgMWlFKPqdFeQww")).not.toBeInTheDocument();
     expect(screen.queryByText("98_待整理照片")).not.toBeInTheDocument();
-    expect(screen.getByText("缺少 1 個資料夾")).toBeInTheDocument();
+    expect(screen.getByText("缺少 7 個資料夾")).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: "開啟 Drive 根資料夾" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("keeps the Drive sidebar count aligned with a saved empty scan result", async () => {
+    window.localStorage.setItem(
+      GOOGLE_DRIVE_ALBUM_STORAGE_KEY,
+      JSON.stringify({
+        rootFolderId: "1p33mX1C8xLeB7P8RvRgMWlFKPqdFeQww",
+        folders: [],
+        dayFolderMap: {},
+        missingFolders: [
+          {
+            key: "cover",
+            label: "封面與精選",
+            name: "00_封面與精選",
+          },
+        ],
+        scannedFolderCount: 0,
+        scannedAt: "2026-06-15T13:57:48.499Z",
+      }),
+    );
+
+    render(<PhotosPage />);
+
+    expect(await screen.findByText("Drive 已設定")).toBeInTheDocument();
+    expect(
+      screen.getByText("2026_北陸孝親紅葉慢旅_照片・已掃描 0 個子資料夾"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "掃描不到既有子資料夾時，請重新連接 Google Drive 後再掃描一次。",
+      ),
+    ).toBeInTheDocument();
   });
 });

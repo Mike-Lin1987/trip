@@ -7,8 +7,11 @@ import type {
   PhotoDriveUploadResult,
 } from "@/types/photos";
 
-export const GOOGLE_DRIVE_PHOTO_SCOPE =
-  "https://www.googleapis.com/auth/drive.file";
+const GOOGLE_DRIVE_PHOTO_SCOPES = [
+  "https://www.googleapis.com/auth/drive.file",
+  "https://www.googleapis.com/auth/drive.metadata.readonly",
+];
+export const GOOGLE_DRIVE_PHOTO_SCOPE = GOOGLE_DRIVE_PHOTO_SCOPES.join(" ");
 export const DRIVE_FOLDER_MIME_TYPE = "application/vnd.google-apps.folder";
 export const GOOGLE_DRIVE_ALBUM_STORAGE_KEY =
   "hokuriku-2026-google-drive-album";
@@ -350,7 +353,7 @@ export function readStoredDriveScanResult(
       return null;
     }
 
-    return parsed;
+    return normalizeStoredDriveScanResult(parsed);
   } catch {
     return null;
   }
@@ -527,4 +530,43 @@ function isPhotoDriveScanResult(value: unknown): value is PhotoDriveScanResult {
     typeof result.scannedFolderCount === "number" &&
     typeof result.scannedAt === "string"
   );
+}
+
+function normalizeStoredDriveScanResult(
+  result: PhotoDriveScanResult,
+): PhotoDriveScanResult {
+  const folders = normalizeDriveFolders(result.folders);
+  const dayFolderMap = {
+    ...filterDayFolderMap(result.dayFolderMap),
+    ...buildDayFolderMap(folders),
+  };
+
+  return {
+    rootFolderId: normalizeDriveFolderId(result.rootFolderId),
+    folders,
+    dayFolderMap,
+    missingFolders: validateRequiredFolders(dayFolderMap),
+    scannedFolderCount: folders.length || result.scannedFolderCount,
+    scannedAt: result.scannedAt,
+  };
+}
+
+function filterDayFolderMap(dayFolderMap: DayFolderMap): DayFolderMap {
+  return Object.entries(dayFolderMap).reduce<DayFolderMap>(
+    (filteredMap, [key, folderId]) => {
+      if (!isPhotoDriveFolderKey(key) || typeof folderId !== "string") {
+        return filteredMap;
+      }
+
+      return {
+        ...filteredMap,
+        [key]: folderId,
+      };
+    },
+    {},
+  );
+}
+
+function isPhotoDriveFolderKey(key: string): key is PhotoDriveFolderKey {
+  return REQUIRED_PHOTO_DRIVE_FOLDERS.some((folder) => folder.key === key);
 }

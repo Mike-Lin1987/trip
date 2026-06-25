@@ -748,8 +748,10 @@ function DriveStatusPanel({
   const [browserGoogleClientId, setBrowserGoogleClientId] = useState(
     readInitialGoogleClientId,
   );
-  const [driveStatusMessage, setDriveStatusMessage] = useState(
-    "Google Drive access token 只保留在目前瀏覽器記憶體。",
+  const [driveStatusMessage, setDriveStatusMessage] = useState(() =>
+    scanResult
+      ? `已掃描 ${scanResult.scannedFolderCount} 個 Google Drive 子資料夾。`
+      : "Google Drive access token 只保留在目前瀏覽器記憶體。",
   );
   const [driveError, setDriveError] = useState("");
   const [isDriveBusy, setIsDriveBusy] = useState(false);
@@ -759,6 +761,11 @@ function DriveStatusPanel({
     ? Object.keys(scanResult.dayFolderMap).length
     : 0;
   const missingFolderCount = scanResult?.missingFolders.length ?? 0;
+  const displayedScannedFolderCount =
+    scanResult?.scannedFolderCount ?? driveStatus.scannedFolderCount;
+  const shouldShowEmptyScanHint = Boolean(
+    scanResult && scanResult.scannedFolderCount === 0 && missingFolderCount > 0,
+  );
   const driveOpenUrl = rootFolderId ? buildDriveOpenUrl(rootFolderId) : "";
   const effectiveGoogleClientId =
     configuredGoogleClientId || browserGoogleClientId.trim();
@@ -885,7 +892,7 @@ function DriveStatusPanel({
           既有相簿資料夾
         </h2>
         <p className="text-[15px] leading-7 text-[#5f5549] sm:text-[16px]">
-          {driveStatus.rootFolderName}・已掃描 {driveStatus.scannedFolderCount} 個子資料夾
+          {driveStatus.rootFolderName}・已掃描 {displayedScannedFolderCount} 個子資料夾
         </p>
       </div>
       <div className="grid min-w-0 gap-2 sm:grid-cols-2 lg:min-w-[360px]">
@@ -909,6 +916,11 @@ function DriveStatusPanel({
             <p className="mt-2 text-[14px] font-semibold text-[#5f5549]">
               {driveStatusMessage}
             </p>
+            {shouldShowEmptyScanHint ? (
+              <p className="mt-2 text-[14px] font-semibold text-[#8a5a3b]">
+                掃描不到既有子資料夾時，請重新連接 Google Drive 後再掃描一次。
+              </p>
+            ) : null}
             <Button
               type="button"
               variant="outline"

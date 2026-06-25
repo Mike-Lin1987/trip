@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   DRIVE_FOLDER_MIME_TYPE,
+  GOOGLE_DRIVE_ALBUM_STORAGE_KEY,
   GOOGLE_DRIVE_PHOTO_SCOPE,
   REQUIRED_PHOTO_DRIVE_FOLDERS,
   buildDayFolderMap,
@@ -8,6 +9,7 @@ import {
   classifyPhotoDriveFolder,
   createGoogleDrivePhotoService,
   normalizeDriveFolderId,
+  readStoredDriveScanResult,
   validateRequiredFolders,
 } from "@/services/googleDrivePhotoService";
 
@@ -191,12 +193,44 @@ describe("googleDrivePhotoService", () => {
     expect(bodyText).toContain("photo-bytes");
   });
 
-  it("uses the least broad Drive scope and builds folder open URLs", () => {
-    expect(GOOGLE_DRIVE_PHOTO_SCOPE).toBe(
+  it("uses Drive scopes that can upload photos and inspect existing folder metadata", () => {
+    expect(GOOGLE_DRIVE_PHOTO_SCOPE.split(/\s+/)).toEqual([
       "https://www.googleapis.com/auth/drive.file",
-    );
+      "https://www.googleapis.com/auth/drive.metadata.readonly",
+    ]);
     expect(buildDriveOpenUrl("folder-id")).toBe(
       "https://drive.google.com/drive/folders/folder-id",
     );
+  });
+
+  it("repairs stale stored scan results from the saved folder list", () => {
+    window.localStorage.setItem(
+      GOOGLE_DRIVE_ALBUM_STORAGE_KEY,
+      JSON.stringify({
+        rootFolderId: "root-folder",
+        folders: albumFolders,
+        dayFolderMap: {},
+        missingFolders: REQUIRED_PHOTO_DRIVE_FOLDERS,
+        scannedFolderCount: 0,
+        scannedAt: "2026-06-25T00:00:00.000Z",
+      }),
+    );
+
+    const result = readStoredDriveScanResult(window.localStorage);
+
+    expect(result?.scannedFolderCount).toBe(4);
+    expect(result?.dayFolderMap.cover).toBe("folder-cover");
+    expect(result?.dayFolderMap.day1).toBe("folder-day01");
+    expect(result?.dayFolderMap.day8).toBe("folder-day08");
+    expect(result?.dayFolderMap.memoir).toBe("folder-memoir");
+    expect(result?.missingFolders.map((folder) => folder.key)).toEqual([
+      "day2",
+      "day3",
+      "day4",
+      "day5",
+      "day6",
+      "day7",
+      "unsorted",
+    ]);
   });
 });
