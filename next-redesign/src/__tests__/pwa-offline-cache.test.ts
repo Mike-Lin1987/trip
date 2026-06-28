@@ -52,20 +52,17 @@ describe("offline itinerary cache policy", () => {
     }
   });
 
-  it("excludes photos, accounting, Google OAuth, Drive API, and upload traffic", () => {
+  it("excludes accounting pages from offline caching", () => {
     const source = readServiceWorkerSource();
 
     for (const excluded of [
-      "/photos",
       "/trip/hokuriku-2026/expenses",
       "/trip/hokuriku-2026/settlement",
-      "accounts.google.com",
-      "oauth2.googleapis.com",
-      "www.googleapis.com/drive",
-      "upload",
     ]) {
       expect(source).toContain(excluded);
     }
+
+    expect(source).not.toContain("/photos");
   });
 
   it("serves static assets with cache-first and avoids protected HTML caching", () => {

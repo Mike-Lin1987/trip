@@ -20,7 +20,7 @@ describe("information architecture consolidation", () => {
     expect(screen.queryByText("這段備註不應顯示")).not.toBeInTheDocument();
   });
 
-  it("removes standalone highlight, autumn, and map entries from navigation", () => {
+  it("removes standalone highlight, autumn, map, and photo entries from navigation", () => {
     const desktopHrefs = siteNavItems.map((item) => item.href);
     const mobileHrefs = mobileNavItems.map((item) => item.href);
 
@@ -31,8 +31,8 @@ describe("information architecture consolidation", () => {
     expect(mobileHrefs).not.toContain("/");
     expect(mobileHrefs).toContain("/destinations");
     expect(mobileHrefs).toContain("/transport");
-    expect(desktopHrefs).toContain("/photos");
-    expect(mobileHrefs).toContain("/photos");
+    expect(desktopHrefs).not.toContain("/photos");
+    expect(mobileHrefs).not.toContain("/photos");
   });
 
   it("removes the daily pace module and embeds route map content in itinerary", () => {

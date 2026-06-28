@@ -1,6 +1,5 @@
 import {
   Bed,
-  Camera,
   CheckSquare,
   Coins,
   Map,
@@ -46,13 +45,6 @@ export const siteNavItems = [
     icon: CheckSquare,
   },
   {
-    href: "/photos",
-    label: "回憶相簿",
-    title: "回憶相簿",
-    description: "自動整理旅途照片，依日期與地點分類，日後可製作旅行回憶錄。",
-    icon: Camera,
-  },
-  {
     href: "/trip/hokuriku-2026/expenses",
     label: "記帳",
     title: "五人共同記帳",
@@ -67,6 +59,5 @@ export const mobileNavItems = [
   { href: "/transport", label: "交通", icon: Train },
   { href: "/hotels", label: "飯店", icon: Bed },
   { href: "/checklist", label: "清單", icon: CheckSquare },
-  { href: "/photos", label: "照片", icon: Camera },
   { href: "/trip/hokuriku-2026/expenses", label: "記帳", icon: Coins },
 ] as const;

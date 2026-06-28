@@ -4,7 +4,7 @@ import { mobileNavItems } from "@/data/navigation";
 export function MobileBottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-[#e6d8c3] bg-[#fffdf8]/96 px-1.5 pb-[calc(env(safe-area-inset-bottom)+0.45rem)] pt-2 shadow-[0_-10px_30px_rgba(47,42,36,0.1)] backdrop-blur-md md:hidden">
-      <div className="grid grid-cols-7 gap-0.5">
+      <div className="grid grid-cols-6 gap-0.5">
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
 

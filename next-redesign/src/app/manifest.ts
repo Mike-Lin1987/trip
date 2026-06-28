@@ -54,12 +54,6 @@ export default function manifest(): MetadataRoute.Manifest {
         url: "/itinerary",
         description: "查看每日交通、住宿與行程節奏。",
       },
-      {
-        name: "旅行照片",
-        short_name: "照片",
-        url: "/photos",
-        description: "上傳、整理與挑選旅行照片。",
-      },
     ],
   };
 }

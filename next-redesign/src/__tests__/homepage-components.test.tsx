@@ -66,7 +66,6 @@ describe("homepage components", () => {
       "/transport",
       "/hotels",
       "/checklist",
-      "/photos",
       "/trip/hokuriku-2026/expenses",
     ]);
   });

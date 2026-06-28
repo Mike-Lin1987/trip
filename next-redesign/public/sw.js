@@ -18,16 +18,11 @@ const STATIC_CACHE_PATHS = new Set([
 ]);
 
 const EXCLUDED_PATH_PREFIXES = [
-  "/photos",
   "/trip/hokuriku-2026/expenses",
   "/trip/hokuriku-2026/settlement",
 ];
 
 const EXCLUDED_URL_PATTERNS = [
-  "accounts.google.com",
-  "oauth2.googleapis.com",
-  "www.googleapis.com/drive",
-  "upload",
 ];
 
 self.addEventListener("install", (event) => {
